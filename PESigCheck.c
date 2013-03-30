@@ -6,6 +6,7 @@ Created by Peleg
 #include <stdio.h>
 #include <string.h>
 
+
 IMAGE_DOS_HEADER* MapPEFile(char* filename)
 {
   	HANDLE pe, pemap;
