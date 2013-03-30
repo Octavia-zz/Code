@@ -6,10 +6,9 @@ Created by Peleg
 #include <stdio.h>
 #include <string.h>
 
-
 IMAGE_DOS_HEADER* MapPEFile(char* filename)
 {
-  	HANDLE pe, pemap;
+	HANDLE pe, pemap;
 	IMAGE_DOS_HEADER* image_dos_header;
 
 	pe = CreateFile(filename,GENERIC_READ | GENERIC_WRITE,
@@ -24,18 +23,11 @@ IMAGE_DOS_HEADER* MapPEFile(char* filename)
 
 	return image_dos_header;
 }
+
 int CheckSignature(char* pebase)
 {
-	int i=0;
-	char signature[2];
 
-	for(i=0; i<2; i++)
-	{
-		signature[i] = *pebase;
-		pebase++;
-	}
-
-	if(!strcmp(signature,"MZ"))
+	if(!strncmp(pebase,"MZ",2))
 	{
 		return 1;
 	}
@@ -46,13 +38,9 @@ int CheckSignature(char* pebase)
 	}
 
 }
-void PrintSignature(char* pebase)
+void PrintSignature(IMAGE_DOS_HEADER *image_dos_header)
 {
-	int i=0;
-	for(i=0; i<2; i++)
-	{
-		printf("%c", pebase[i]);
-	}
+	printf("%2X", image_dos_header->e_magic);
 }
 
 int main(int argc, char** argv)
@@ -78,7 +66,7 @@ int main(int argc, char** argv)
 
 	printf("Base Address: %p\n", image_dos_header);
 	printf("Signature: ");
-	PrintSignature(pebase);
+	PrintSignature(image_dos_header);
 	printf("\n");
 	
 	if(CheckSignature(pebase))
