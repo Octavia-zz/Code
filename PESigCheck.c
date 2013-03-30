@@ -8,7 +8,7 @@ Created by Peleg
 
 IMAGE_DOS_HEADER* MapPEFile(char* filename)
 {
-  HANDLE pe, pemap;
+  	HANDLE pe, pemap;
 	IMAGE_DOS_HEADER* image_dos_header;
 
 	pe = CreateFile(filename,GENERIC_READ | GENERIC_WRITE,
