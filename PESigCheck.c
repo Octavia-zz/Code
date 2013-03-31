@@ -40,15 +40,22 @@ int CheckSignature(char* pebase)
 }
 void PrintSignature(IMAGE_DOS_HEADER *image_dos_header)
 {
-	printf("%2X", image_dos_header->e_magic);
+	printf("%.2s", image_dos_header);
 }
 
 int main(int argc, char** argv)
 {
 	
-	IMAGE_DOS_HEADER* image_dos_header;
+	IMAGE_DOS_HEADER *image_dos_header;
+	IMAGE_NT_HEADERS *image_nt_header;
+	IMAGE_SECTION_HEADER *image_section_header;
+	char *textsection, *textsectionend;
+	int textsectionvasize;
+
 	char* pebase = NULL;
 	char *buf;
+	unsigned int offset = 40;
+	unsigned int i = 0, sections = 0;
 
 	if(argc < 2)
 	{
@@ -57,7 +64,7 @@ int main(int argc, char** argv)
 	}
 
 	buf = _strdup(argv[1]);
-	image_dos_header = MapPEFile(buf);
+	image_dos_header = MapPEFile(buf); 
 	pebase = (char*)image_dos_header;
 
 	printf(":: PE Signature Checker ::\n");
@@ -77,7 +84,28 @@ int main(int argc, char** argv)
 	{
 		printf("File's Signature is Invalid.");
 	}
+	image_nt_header = (IMAGE_NT_HEADERS*)((BYTE*)image_dos_header + image_dos_header->e_lfanew);
+	printf("\n\nPE Header Signature: %.2s\n\n", image_nt_header);
+
+	sections = image_nt_header ->FileHeader.NumberOfSections;
+
+	image_section_header = (IMAGE_SECTION_HEADER*)((BYTE*)image_dos_header 
+		+ image_dos_header->e_lfanew + sizeof(IMAGE_NT_HEADERS));
+
+	textsection = (char*)((BYTE*)image_dos_header + image_section_header->PointerToRawData);
+	textsectionend = (char*)((BYTE*)image_dos_header + image_section_header->PointerToRawData 
+		+ image_section_header->SizeOfRawData);
 	
+	textsectionvasize = 
+	printf("Text Section VA Size: %d", textsectionvasize);
+	/*for(; i < sections; i++, offset += 40)
+	{
+		printf("%s\t", image_section_header ->Name);
+
+		image_section_header = (IMAGE_SECTION_HEADER*)((BYTE*)image_dos_header 
+			+ image_dos_header->e_lfanew + sizeof(IMAGE_NT_HEADERS) + offset);
+	}*/
+
 	free(buf);
 
 	fflush(stdin);
