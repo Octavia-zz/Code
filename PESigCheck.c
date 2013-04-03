@@ -43,6 +43,16 @@ void PrintSignature(IMAGE_DOS_HEADER *image_dos_header)
 	printf("%.2s", image_dos_header);
 }
 
+void* GetBaseAddressFromPEB()
+{
+	__asm
+	{
+		mov eax, FS:[0x30];
+		add eax, 8;
+		mov eax, [eax];
+	}
+}
+
 int main(int argc, char** argv)
 {
 	
@@ -50,12 +60,13 @@ int main(int argc, char** argv)
 	IMAGE_NT_HEADERS *image_nt_header;
 	IMAGE_SECTION_HEADER *image_section_header;
 	char *textsection, *textsectionend;
-	int textsectionvasize;
+	
 
 	char* pebase = NULL;
 	char *buf;
-	unsigned int offset = 40;
-	unsigned int i = 0, sections = 0;
+	unsigned int i = 0, sections = 0, offset = 0;
+	unsigned int OEPoffset = 0;
+	unsigned int textsectionvasize,vsize=0,voffset=0;
 
 	if(argc < 2)
 	{
@@ -85,26 +96,34 @@ int main(int argc, char** argv)
 		printf("File's Signature is Invalid.");
 	}
 	image_nt_header = (IMAGE_NT_HEADERS*)((BYTE*)image_dos_header + image_dos_header->e_lfanew);
+
 	printf("\n\nPE Header Signature: %.2s\n\n", image_nt_header);
+
+	////Text Section Pre-Test
+	//textsection = (char*)((BYTE*)image_dos_header + image_section_header->PointerToRawData);
+	//textsectionend = (char*)((BYTE*)image_dos_header + image_section_header->PointerToRawData 
+	//	+ image_section_header->SizeOfRawData);
+	//textsectionvasize = image_section_header->Misc.VirtualSize;
+	////Finish Text Section Pre-Tests.
+
 
 	sections = image_nt_header ->FileHeader.NumberOfSections;
 
-	image_section_header = (IMAGE_SECTION_HEADER*)((BYTE*)image_dos_header 
-		+ image_dos_header->e_lfanew + sizeof(IMAGE_NT_HEADERS));
-
-	textsection = (char*)((BYTE*)image_dos_header + image_section_header->PointerToRawData);
-	textsectionend = (char*)((BYTE*)image_dos_header + image_section_header->PointerToRawData 
-		+ image_section_header->SizeOfRawData);
-	
-	textsectionvasize = 
-	printf("Text Section VA Size: %d", textsectionvasize);
-	/*for(; i < sections; i++, offset += 40)
+	for(; i < sections; i++, offset += 40)
 	{
-		printf("%s\t", image_section_header ->Name);
-
 		image_section_header = (IMAGE_SECTION_HEADER*)((BYTE*)image_dos_header 
 			+ image_dos_header->e_lfanew + sizeof(IMAGE_NT_HEADERS) + offset);
-	}*/
+
+		vsize = image_section_header->Misc.VirtualSize;
+
+			if(offset <= OEPoffset && OEPoffset < (offset+vsize))
+			{
+				break; //Found Original Entry Point (OEP)
+			}
+	}
+	
+	printf("Code Section: %s\n", image_section_header->Name);
+	
 
 	free(buf);
 
