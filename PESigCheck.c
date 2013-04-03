@@ -6,6 +6,9 @@ Created by Peleg
 #include <stdio.h>
 #include <string.h>
 
+#define NOT_PE_FILE -1;
+#define NO_ARGUMENTS -2;
+
 IMAGE_DOS_HEADER* MapPEFile(char* filename)
 {
 	HANDLE pe, pemap;
@@ -53,6 +56,14 @@ void* GetBaseAddressFromPEB()
 	}
 }
 
+ void GoToOEP(void* oep)
+{
+	__asm
+	{
+		//To be completed with Shellcode.
+	}
+}
+
 int main(int argc, char** argv)
 {
 	
@@ -60,7 +71,7 @@ int main(int argc, char** argv)
 	IMAGE_NT_HEADERS *image_nt_header;
 	IMAGE_SECTION_HEADER *image_section_header;
 	char *textsection, *textsectionend;
-	
+	BYTE* oep;
 
 	char* pebase = NULL;
 	char *buf;
@@ -71,7 +82,7 @@ int main(int argc, char** argv)
 	if(argc < 2)
 	{
 		printf("Usage: %s %s", argv[0], argv[1]);
-		return 0;
+		return NO_ARGUMENTS;
 	}
 
 	buf = _strdup(argv[1]);
@@ -94,6 +105,7 @@ int main(int argc, char** argv)
 	else
 	{
 		printf("File's Signature is Invalid.");
+		return NOT_PE_FILE;
 	}
 	image_nt_header = (IMAGE_NT_HEADERS*)((BYTE*)image_dos_header + image_dos_header->e_lfanew);
 
@@ -122,9 +134,11 @@ int main(int argc, char** argv)
 			}
 	}
 	
+	oep = (BYTE*)image_dos_header + image_nt_header->OptionalHeader.AddressOfEntryPoint; 
 	printf("Code Section: %s\n", image_section_header->Name);
+	printf("Original Entry Point: %p\n", oep);
+	printf("OEP Content: %X\n", *oep);
 	
-
 	free(buf);
 
 	fflush(stdin);
